@@ -1,45 +1,29 @@
-#Commande du compilateur
-CFLAGS= -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-CC= /home/louis/Documents/os/cross_compiler_32bits/bin/i686-elf-gcc $(CFLAGS)
+ISODIR=isodir
+BOOTDIR=$(ISODIR)/boot
+ISONAME=Shea.iso
 
-ASFLAGS=
-AS= /home/louis/Documents/os/cross_compiler_32bits/bin/i686-elf-as $(ASFLAGS)
+BINNAME=Shea.kernel
+BINDIR=kernel
 
-LDFLAGS= -T build/linker.ld -ffreestanding -O2 -nostdlib -lgcc
-LD= /home/louis/Documents/os/cross_compiler_32bits/bin/i686-elf-gcc $(LDFLAGS)
-#
-projet_name= Shea.bin
-Projet = build/bin/$(projet_name)
-#Sources du projet
-Sources_c = src/kernel.c
+.PHONY: all clean install
 
-Sources_s = src/boot.s
+all: install
 
+clean:
+	cd kernel;\
+	make clean;\
+	cd ../
 
-Objects_c = $(Sources_c:.c=.o)
-Objects_s = $(Sources_s:.s=.o)
+install:
+	cd kernel;\
+	$(MAKE) -f ./Makefile;\
+	cd ../;\
 
-Dependances = $(Sources:.c=.d)
+	mkdir -p $(ISODIR);\
+	mkdir -p $(BOOTDIR);\
+	mkdir -p $(BOOTDIR)/grub;\
 
-iso_folder = isodir
-boot_folder = $(iso_folder)/boot
-iso_name = $(projet_name:.bin=.iso)
+	cp grub.cfg $(BOOTDIR)/grub/grub.cfg;\
+	cp $(BINDIR)/$(BINNAME) $(BOOTDIR)/$(BINNAME);\
+	grub-mkrescue -o $(ISONAME) $(ISODIR)
 
-create_iso: build
-	cp $(Projet) $(boot_folder)/$(projet_name)
-	grub-mkrescue -o $(iso_name) $(iso_folder)
-
-build: $(Objects_c) $(Objects_s)
-	$(LD) -o $(Projet) $+
-	rm -f $(Objects_c) $(Objects_s)
-
-# Créer les fichier objets pour les linker ensuite
-$(Objects_c): $(Sources_c)
-	$(CC) -o $@ -c $<
-
-$(Objects_s): $(Sources_s)
-	$(AS) $< -o $@ 
-
-
-# inclusion des dependances
--include $(Dependances)
