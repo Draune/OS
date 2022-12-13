@@ -19,6 +19,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
+init_kernel.o\
 kernel.o \
 
 LIBK_OBJS=\
@@ -51,10 +52,10 @@ Shea.kernel: $(OBJS)
 	grub-file --is-x86-multiboot Shea.kernel
 
 .c.o:
-	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
+	$(CC) -MD -c $< -o $@ $(CFLAGS)
 
 .S.o:
-	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)
+	$(CC) -MD -c $< -o $@ $(CFLAGS)
 
 clean:
 	rm -f Shea.kernel
