@@ -1,6 +1,7 @@
 #include <tty.h>
 #include <gdt.h>
 #include <libk/stdio.h>
+#include <kheap/kheap.h>
 
 
 void init_kernel(void){
@@ -9,4 +10,7 @@ void init_kernel(void){
 
     kinit_gdt();
     printf("init : gdt\n");
+
+    k_init_heap();
+    printf("init : heap\n");
 }

@@ -21,9 +21,14 @@ KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
 init_kernel.o\
 kernel.o \
+kheap/kavl.o \
+kheap/kheap.o \
+kheap/knoeud.o \
+kheap/kfreespace.o \
 
 LIBK_OBJS=\
 libk/stdio/printf.o \
+libk/stdio/print.o \
 libk/stdio/putchar.o \
 libk/stdio/puts.o \
 libk/string/memcmp.o \
@@ -31,6 +36,9 @@ libk/string/memcpy.o \
 libk/string/memmove.o \
 libk/string/memset.o \
 libk/string/strlen.o \
+libk/stdlib/malloc.o \
+libk/stdlib/free.o \
+libk/stdlib/realloc.o \
 
 OBJS=\
 $(KERNEL_OBJS) \
@@ -51,7 +59,7 @@ Shea.kernel: $(OBJS)
 	$(CC) -o $@ $(CFLAGS) $(LINK_LIST)
 	grub-file --is-x86-multiboot Shea.kernel
 
-.c.o:
+.c.o: kernel_arch
 	$(CC) -MD -c $< -o $@ $(CFLAGS)
 
 .S.o:
@@ -63,5 +71,9 @@ clean:
 	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
 
 install: Shea.kernel
+
+kernel_arch:
+	chmod +x scripts/define_arch.sh
+	./scripts/define_arch.sh $(HOSTARCH)
 
 -include $(OBJS:.o=.d)
