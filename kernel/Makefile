@@ -19,6 +19,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
+multiboot.o\
 init_kernel.o\
 kernel.o \
 kheap/kavl.o \

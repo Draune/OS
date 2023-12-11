@@ -3,70 +3,128 @@
 #include <stdarg.h>
 #include <libk/stdio.h>
 #include <libk/string.h>
+#include <stdint.h>
 
-int printf(const char* restrict format, ...) {
+int print_int(int32_t int_);
+int print_uint(uint32_t int_);
+int print_hex(uint32_t int_);
+int print_char(char char_);
+
+int printf(const char *restrict format, ...)
+{
 	va_list parameters;
 	va_start(parameters, format);
 
 	int written = 0;
 
-	while (*format != '\0') {
-		size_t maxrem = INT_MAX - written;
-
-		if (format[0] != '%' || format[1] == '%') {
-			if (format[0] == '%')
-				format++;
-			size_t amount = 1;
-			while (format[amount] && format[amount] != '%')
-				amount++;
-			if (maxrem < amount) {
-				// TODO: Set errno to EOVERFLOW.
-				return -1;
+	while (*format != '\0')
+	{
+		if (*format != '%')
+		{
+			int to_write = 0;
+			while (*(format + to_write) != '%' && *(format + to_write) != '\0')
+			{
+				to_write++;
 			}
-			if (!print(format, amount))
-				return -1;
-			format += amount;
-			written += amount;
-			continue;
+			print(format, to_write);
+			written += to_write;
+			format += to_write;
 		}
-
-		const char* format_begun_at = format++;
-
-		if (*format == 'c') {
-			format++;
-			char c = (char) va_arg(parameters, int /* char promotes to int */);
-			if (!maxrem) {
-				// TODO: Set errno to EOVERFLOW.
-				return -1;
-			}
-			if (!print(&c, sizeof(c)))
-				return -1;
+		else if (*(format + 1) == 'c')
+		{
+			format += 2;
+			char c = (char)va_arg(parameters, int /* char promotes to int */);
+			print_char(c);
 			written++;
-		} else if (*format == 's') {
+		}
+		else if (*(format + 1) == 's')
+		{
+			format += 2;
+		}
+		else if (*(format + 1) == 'd')
+		{
+			format += 2;
+			int32_t i = (int32_t)va_arg(parameters, int /* char promotes to int */);
+			written += print_int(i);
+		}
+		else if (*(format + 1) == 'u')
+		{
+			format += 2;
+			uint32_t i = (uint32_t)va_arg(parameters, unsigned int /* char promotes to int */);
+			written += print_uint(i);
+		}
+		else if (*(format + 1) == 'x')
+		{
+			format += 2;
+			uint32_t i = (uint32_t)va_arg(parameters, unsigned int /* char promotes to int */);
+			written += print_hex(i);
+		}
+		else
+		{
 			format++;
-			const char* str = va_arg(parameters, const char*);
-			size_t len = strlen(str);
-			if (maxrem < len) {
-				// TODO: Set errno to EOVERFLOW.
-				return -1;
-			}
-			if (!print(str, len))
-				return -1;
-			written += len;
-		} else {
-			format = format_begun_at;
-			size_t len = strlen(format);
-			if (maxrem < len) {
-				// TODO: Set errno to EOVERFLOW.
-				return -1;
-			}
-			if (!print(format, len))
-				return -1;
-			written += len;
-			format += len;
 		}
 	}
 
 	va_end(parameters);
 	return written;
+}
+
+#define BUF_SIZE 30
+
+int print_int(int32_t int_)
+{
+	char buf[BUF_SIZE];
+	buf[BUF_SIZE - 1] = 0;
+	int neg = (int_ >= 0) ? 0 : 1;
+	int written = 0;
+	while (int_ != 0)
+	{
+		written++;
+		buf[BUF_SIZE - 1 - written] = (int_ % 10) + '0';
+		int_ /= 10;
+	}
+	if (neg)
+	{
+		written++;
+		buf[BUF_SIZE - 1 - written] = '-';
+	}
+	print(&(buf[BUF_SIZE - 1 - written]), written + 1);
+	return written;
+}
+
+int print_uint(uint32_t int_)
+{
+	char buf[BUF_SIZE];
+	buf[BUF_SIZE - 1] = 0;
+	int written = 0;
+	while (int_ != 0)
+	{
+		written++;
+		buf[BUF_SIZE - 1 - written] = (int_ % 10) + '0';
+		int_ /= 10;
+	}
+	print(&(buf[BUF_SIZE - 1 - written]), written + 1);
+	return written;
+}
+
+int print_hex(uint32_t int_)
+{
+	char buf[BUF_SIZE];
+	buf[BUF_SIZE - 1] = 0;
+	int written = 0;
+	while (int_ != 0)
+	{
+		written++;
+		int mod = int_ % 16;
+		buf[BUF_SIZE - 1 - written] = (mod < 10) ? mod + '0' : mod - 10 + 'A';
+		int_ /= 16;
+	}
+	print(&(buf[BUF_SIZE - 1 - written]), written + 1);
+	return written;
+}
+
+int print_char(char char_)
+{
+	print(&char_, 1);
+	return 1;
 }

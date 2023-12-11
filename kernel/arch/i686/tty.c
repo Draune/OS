@@ -72,6 +72,8 @@ void terminal_write(const char* data, size_t size) {
 					terminal_scroll();
 				}
 				break;
+			case '\0':
+				break;
 			default:
 				terminal_putchar(data[i]);
 				break;
